@@ -43,7 +43,7 @@ apiService.interceptors.response.use(
           break;
         case 404:
           console.error("Endpoint not found:", error.config.url);
-          break;
+          return Promise.reject({ message: "Endpoint not found", status: 404 });
         case 422:
           console.error(
             "Validation error:",
@@ -61,6 +61,10 @@ apiService.interceptors.response.use(
       }
     } else if (error.request) {
       console.error("Network error (CORS?)", error.message);
+      return Promise.reject({
+        message: "Network error",
+        details: error.message,
+      });
     }
     return Promise.reject(error);
   }
