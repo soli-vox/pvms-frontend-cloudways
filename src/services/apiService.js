@@ -2,6 +2,9 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+axios.defaults.withCredentials = true;
+axios.defaults.withXSRFToken = true;
+
 const apiService = axios.create({
   baseURL: API_BASE_URL,
   headers: {
