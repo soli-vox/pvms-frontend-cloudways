@@ -13,11 +13,14 @@ const apiService = axios.create({
 
 apiService.interceptors.request.use(
   (config) => {
+    console.log("Request config:", config);
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      console.warn("No token found - making unauthenticated request");
+      console.warn(
+        "No token found - making unauthenticated request (expected for /login)"
+      );
     }
     return config;
   },
@@ -25,8 +28,12 @@ apiService.interceptors.request.use(
 );
 
 apiService.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("Response:", response);
+    return response;
+  },
   (error) => {
+    console.error("Error:", error.response || error.request || error.message);
     if (error.response) {
       switch (error.response.status) {
         case 401:
@@ -34,18 +41,26 @@ apiService.interceptors.response.use(
           localStorage.removeItem("token");
           window.location.href = "/login";
           break;
-        case 403:
-          console.error("Forbidden - insufficient permissions");
-          break;
         case 404:
           console.error("Endpoint not found:", error.config.url);
           break;
+        case 422:
+          console.error(
+            "Validation error:",
+            error.response.data.errors || error.response.data.message
+          );
+          return Promise.reject({
+            message: "Validation failed",
+            errors: error.response.data.errors,
+          });
         case 500:
           console.error("Server error:", error.message);
           break;
         default:
           console.error("Unexpected error:", error.message);
       }
+    } else if (error.request) {
+      console.error("Network error (CORS?)", error.message);
     }
     return Promise.reject(error);
   }
